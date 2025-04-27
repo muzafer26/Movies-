@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Movie Finder</title>
+    <!-- Link the CSS file -->
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f0f0f;
+            color: #fff;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header styles */
+        header {
+            background-color: #1a1a1a;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            color: #e50914;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 60%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            background-color: #333;
+            color: #fff;
+        }
+        
+        .search-box button {
+            padding: 10px 15px;
+            background-color: #e50914;
+            color: #fff;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        /* Filter styles */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .filter-section h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #e50914;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 15px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .filter-btn.active {
+            background-color: #e50914;
+        }
+        
+        /* Movie grid styles */
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .movie-card {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+        
+        .movie-info {
+            padding: 15px;
+        }
+        
+        .movie-title {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .movie-genres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .genre-tag {
+            background-color: #333;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+        
+        .platforms {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .platform {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .netflix { background-color: #e50914; }
+        .prime { background-color: #00a8e1; }
+        .disney { background-color: #113ccf; }
+        .hbo { background-color: #5822b4; }
+        .hulu { background-color: #1ce783; color: #000; }
+        
+        .view-btn {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            background-color: #e50914;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: #1a1a1a;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            margin-top: 20px;
+        }
+        
+        .modal-poster {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #e50914;
+            margin-bottom: 10px;
+        }
+        
+        .modal-platforms {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-description {
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .modal-body {
+                display: flex;
+                gap: 20px;
+            }
+            
+            .modal-poster {
+                max-width: 300px;
+                margin-bottom: 0;
+            }
+            
+            .modal-details {
+                flex: 1;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .movie-poster {
+                height: 225px;
+            }
+        }
+            footer {
+  background-color: #1a1a1a;
+  padding: 20px 0;
+  text-align: center;
+  margin-top: 40px;
+}
+
+footer p {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Movie Finder</h1>
+           <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search for movies...">
+                <button id="searchBtn">Search</button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="filters">
+            <div class="filter-section">
+                <h3>Platforms</h3>
+                <div class="filter-buttons" id="platformFilters">
+                    <button class="filter-btn active" data-platform="all">All</button>
+                    <button class="filter-btn" data-platform="netflix">Netflix</button>
+                    <button class="filter-btn" data-platform="prime">Prime</button>
+                    <button class="filter-btn" data-platform="disney">Disney+</button>
+                    <button class="filter-btn" data-platform="hbo">HBO</button>
+                    <button class="filter-btn" data-platform="hulu">Hulu</button>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3>Genres</h3>
+                <div class="filter-buttons" id="genreFilters">
+                    <button class="filter-btn active" data-genre="all">All</button>
+                    <button class="filter-btn" data-genre="action">Action</button>
+                    <button class="filter-btn" data-genre="comedy">Comedy</button>
+                    <button class="filter-btn" data-genre="drama">Drama</button>
+                    <button class="filter-btn" data-genre="sci-fi">Sci-Fi</button>
+                    <button class="filter-btn" data-genre="horror">Horror</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="movie-grid" id="movieGrid">
+            <!-- Movies will be inserted here by JavaScript -->
+        </div>
+    </div>
+    
+    <div id="movieModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-body" id="modalBody">
+                <!-- Movie details will be inserted here -->
+            </div>
+        </div>
+    </div>
+<footer>
+  <div class="container">
+    <p>© 2025 Movie Finder. Made with ❤️ for movie lovers.</p>
+  </div>
+</footer>
+
+    
+    <script>
+        // Sample movie data
+        const movies = [
+            {
+                id: 1,
+                title: "Inception",
+                poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg",
+                genres: ["sci-fi", "action"],
+                platforms: ["netflix", "hbo"],
+                description: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
+                year: 2010,
+                director: "Christopher Nolan"
+            },
+            {
+                id: 2,
+                title: "The Shawshank Redemption",
+                poster: "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
+                genres: ["drama"],
+                platforms: ["netflix", "prime"],
+                description: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
+                year: 1994,
+                director: "Frank Darabont"
+            },
+            {
+                id: 3,
+                title: "The Dark Knight",
+                poster: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg",
+                genres: ["action", "drama"],
+                platforms: ["hbo", "hulu"],
+                description: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
+                year: 2008,
+                director: "Christopher Nolan"
+            },
+                       {
+                id: 5,
+                title: "The Matrix",
+                poster: "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg",
+                genres: ["action", "sci-fi"],
+                platforms: ["hbo", "netflix"],
+                description: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
+                year: 1999,
+                director: "Lana Wachowski, Lilly Wachowski"
+            },
+            {
+                id: 6,
+                title: "Forrest Gump",
+                poster: "https://m.media-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_.jpg",
+                genres: ["drama", "romance"],
+                platforms: ["disney", "prime"],
+                description: "The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75.",
+                year: 1994,
+                director: "Robert Zemeckis"
+            },
+            {
+                id: 7,
+                title: "The Godfather",
+                poster: "https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg",
+                genres: ["crime", "drama"],
+                platforms: ["netflix", "prime", "hbo"],
+                description: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
+                year: 1972,
+                director: "Francis Ford Coppola"
+            },
+            {
+                id: 8,
+                title: "Interstellar",
+                poster: "https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg",
+                genres: ["adventure", "drama", "sci-fi"],
+                platforms: ["prime", "hulu"],
+                description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+                year: 2014,
+                director: "Christopher Nolan"
+            },  
+            {
+                id: 9,
+                title: "The Imitation Game",
+                poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ2LV_      7AxFXC4CntvXoehjA6zxjKzpqBRLMMFkPguR9LGJW__lx",
+                genres: ["biography", "drama", "thriller"],
+                platforms: ["prime", "hbo", "apple tv"],
+                description: "During World War II, mathematician Alan Turing tries to crack   the German Enigma code with help from a team of cryptanalysts.",
+                year: 2014,
+                director: "Morten Tyldum"
+           },
+           {
+    id: 10,
+    title: "Gladiator",
+    poster: "https://upload.wikimedia.org/wikipedia/en/f/fb/Gladiator_%282000_film_poster%29.png",
+    genres: ["action", "drama", "adventure"],
+    platforms: ["netflix", "prime", "hbo"],
+    description: "A former Roman General seeks revenge against the corrupt emperor who murdered his family and sent him into slavery.",
+    year: 2000,
+    director: "Ridley Scott"
+           },
+           {
+    id: 11,
+    title: "Fight Club",
+    poster: "https://m.media-amazon.com/images/M/MV5BOTgyOGQ1NDItNGU3Ny00MjU3LTg2YWEtNmEyYjBiMjI1Y2M5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    genres: ["drama", "thriller"],
+    platforms: ["prime", "hbo", "apple tv"],
+    description: "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into much more.",
+    year: 1999,
+    director: "David Fincher"
+},
+   {
+    id: 12,
+    title: "Prisoners",
+    poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_8Sxj14kFW_ey8HSZ6XFlKmAAEplgl1inxg&s",
+    genres: ["crime", "drama", "mystery"],
+    platforms: ["prime", "hbo"],
+    description: "When Keller Dover's daughter and her friend go missing, he takes matters into his own hands as the police pursue multiple leads.",
+    year: 2013,
+    director: "Denis Villeneuve"
+},
+    {
+    id: 13,
+    title: "Parasite",
+    poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcyJYd_sWzQdj87gwIiDRpi6JtzfY6-XLG-w&s",
+    genres: ["drama", "thriller"],
+    platforms: ["prime", "hulu"],
+    description: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+    year: 2019,
+    director: "Bong Joon-ho"
+},
+ 
+    {
+    id: 14,
+    title: "Good Will Hunting",
+    poster: "https://m.media-amazon.com/images/M/MV5BNDdjZGQ5YzEtNTc2My00Mjc0LWFlMTctYzkwMzZlNzdiZWYzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    genres: ["drama", "romance"],
+    platforms: ["prime", "hbo"],
+    description: "Will Hunting, a janitor at MIT, has a gift for mathematics but needs help from a psychologist to find direction in his life.",
+    year: 1997,
+    director: "Gus Van Sant"
+},
+       {
+    id: 15,
+    title: "The Prestige",
+    poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy0KPQje8-7eC3f0YB2-797dCKKN0Z66e0tg&s",
+    genres: ["drama", "mystery", "sci-fi"],
+    platforms: ["prime", "hbo"],
+    description: "After a tragic accident, two stage magicians engage in a battle to create the ultimate illusion while sacrificing everything they have to outwit each other.",
+    year: 2006,
+    director: "Christopher Nolan"
+},
+{
+    id: 16,
+    title: "The Green Mile",
+    poster: "https://m.media-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1_FMjpg_UX1000_.jpg",
+    genres: ["crime", "drama", "fantasy"],
+    platforms: ["prime", "netflix"],
+    description: "The lives of guards on Death Row are affected by one of their charges: a black man accused of child murder and rape, yet who has a mysterious gift.",
+    year: 1999,
+    director: "Frank Darabont"
+},
+{
+    id: 17,
+    title: "Se7en",
+    poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdjqIvHHgtx6DcLeK-wMA5zmQ9j-GEWCGhhw&s",
+    genres: ["crime", "drama", "mystery"],
+    platforms: ["hbo", "prime"],
+    description: "Two detectives, a rookie and a veteran, hunt a serial killer who uses the seven deadly sins as his motives.",
+    year: 1995,
+    director: "David Fincher"
+},
+{
+    id: 18,
+    title: "The Wolf of Wall Street",
+    poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH3apVAChDoOdWfhfYpyXV6GLqnRIosZzKvg&s",
+    genres: ["biography", "comedy", "crime"],
+    platforms: ["prime", "netflix"],
+    description: "Based on the true story of Jordan Belfort, from his rise to a wealthy stock-broker living the high life to his fall involving crime and corruption.",
+    year: 2013,
+    director: "Martin Scorsese"
+},
+   {
+    id: 19,
+    title: "Joker",
+    poster: "https://upload.wikimedia.org/wikipedia/en/e/e1/Joker_%282019_film%29_poster.jpg",
+    genres: ["crime", "drama", "thriller"],
+    platforms: ["prime", "hbo"],
+    description: "In Gotham City, a mentally troubled comedian embarks on a downward spiral that leads to the creation of an iconic villain.",
+    year: 2019,
+    director: "Todd Phillips"
+}, 
+   {
+    id: 20,
+    title: "Blade Runner 2049",
+    poster: "https://m.media-amazon.com/images/M/MV5BNzA1Njg4NzYxOV5BMl5BanBnXkFtZTgwODk5NjU3MzI@._V1_.jpg",
+    genres: ["sci-fi", "drama"],
+    platforms: ["prime", "hbo"],
+    description: "Young Blade Runner K's discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who's been missing for thirty years.",
+    year: 2017,
+    director: "Denis Villeneuve"
+},
+  {
+    id: 21,
+    title: "Oppenheimer",
+    poster: "https://upload.wikimedia.org/wikipedia/en/thumb/4/4a/Oppenheimer_%28film%29.jpg/250px-Oppenheimer_%28film%29.jpg",
+    genres: ["biography", "drama", "history"],
+    platforms: ["prime", "apple tv"],
+    description: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II.",
+    year: 2023,
+    director: "Christopher Nolan"
+}
+
+
+
+
+
+        ];
+
+        // DOM Elements
+        const movieGrid = document.getElementById('movieGrid');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const platformFilters = document.getElementById('platformFilters');
+        const genreFilters = document.getElementById('genreFilters');
+        const modal = document.getElementById('movieModal');
+        const modalBody = document.getElementById('modalBody');
+        const closeBtn = document.querySelector('.close');
+
+        // Current filters
+        let currentFilters = {
+            platform: 'all',
+            genre: 'all',
+            search: ''
+        };
+
+        // Initialize
+        function init() {
+            displayMovies(movies);
+            setupEventListeners();
+ 
