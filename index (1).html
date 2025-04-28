@@ -578,4 +578,189 @@ footer p {
         function init() {
             displayMovies(movies);
             setupEventListeners();
- 
+        }
+
+        // Display movies
+        function displayMovies(moviesToShow) {
+            movieGrid.innerHTML = '';
+            
+            if (moviesToShow.length === 0) {
+                movieGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 20px;">No movies found matching your criteria.</p>';
+                return;
+            }
+            
+            moviesToShow.forEach(movie => {
+                const movieCard = createMovieCard(movie);
+                movieGrid.appendChild(movieCard);
+            });
+        }
+
+        // Create movie card
+        function createMovieCard(movie) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            
+            // Create genres HTML
+            const genresHTML = movie.genres.map(genre => 
+                `<span class="genre-tag">${genre.charAt(0).toUpperCase() + genre.slice(1)}</span>`
+            ).join('');
+            
+            // Create platforms HTML
+            const platformsHTML = movie.platforms.map(platform => 
+                `<span class="platform ${platform}" title="${platform.charAt(0).toUpperCase() + platform.slice(1)}">${platform.charAt(0).toUpperCase()}</span>`
+            ).join('');
+            
+            card.innerHTML = `
+                <img src="${movie.poster}" alt="${movie.title}" class="movie-poster" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                <div class="movie-info">
+                    <h3 class="movie-title">${movie.title}</h3>
+                    <div class="movie-genres">${genresHTML}</div>
+                    <div class="platforms">${platformsHTML}</div>
+                    <button class="view-btn" data-id="${movie.id}">View Details</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Filter movies
+        function filterMovies() {
+            let filteredMovies = movies;
+            
+            // Filter by platform
+            if (currentFilters.platform !== 'all') {
+                filteredMovies = filteredMovies.filter(movie => 
+                    movie.platforms.includes(currentFilters.platform)
+                );
+            }
+            
+            // Filter by genre
+            if (currentFilters.genre !== 'all') {
+                filteredMovies = filteredMovies.filter(movie => 
+                    movie.genres.includes(currentFilters.genre)
+                );
+            }
+            
+            // Filter by search
+            if (currentFilters.search) {
+                const searchTerm = currentFilters.search.toLowerCase();
+                filteredMovies = filteredMovies.filter(movie => 
+                    movie.title.toLowerCase().includes(searchTerm) ||
+                    movie.genres.some(genre => genre.includes(searchTerm)) ||
+                    movie.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            displayMovies(filteredMovies);
+        }
+
+        // Show movie details
+        function showMovieDetails(movieId) {
+            const movie = movies.find(m => m.id === parseInt(movieId));
+            if (!movie) return;
+            
+            // Create genres HTML
+            const genresHTML = movie.genres.map(genre => 
+                `<span class="genre-tag">${genre.charAt(0).toUpperCase() + genre.slice(1)}</span>`
+            ).join('');
+            
+            // Create platforms HTML
+            const platformsHTML = movie.platforms.map(platform => 
+                `<span class="platform ${platform}" title="${platform.charAt(0).toUpperCase() + platform.slice(1)}">${platform.charAt(0).toUpperCase()}</span>`
+            ).join('');
+            
+            modalBody.innerHTML = `
+                <img src="${movie.poster}" class="modal-poster" alt="${movie.title}" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                <div class="modal-details">
+                    <h2 class="modal-title">${movie.title} (${movie.year})</h2>
+                    <div class="movie-genres">${genresHTML}</div>
+                    <div class="modal-platforms">
+                        <p>Available on: ${platformsHTML}</p>
+                    </div>
+                    <p><strong>Director:</strong> ${movie.director}</p>
+                    <p class="modal-description">${movie.description}</p>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Platform filter buttons
+            platformFilters.addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('#platformFilters .filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    e.target.classList.add('active');
+                    
+                    // Update current filter
+                    currentFilters.platform = e.target.dataset.platform;
+                    
+                    // Apply filters
+                    filterMovies();
+                }
+            });
+            
+            // Genre filter buttons
+            genreFilters.addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('#genreFilters .filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    e.target.classList.add('active');
+                    
+                    // Update current filter
+                    currentFilters.genre = e.target.dataset.genre;
+                    
+                    // Apply filters
+                    filterMovies();
+                }
+            });
+            
+            // Search
+            searchBtn.addEventListener('click', () => {
+                currentFilters.search = searchInput.value.trim();
+                filterMovies();
+            });
+            
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    currentFilters.search = searchInput.value.trim();
+                    filterMovies();
+                }
+            });
+            
+            // View details buttons
+            movieGrid.addEventListener('click', (e) => {
+                if (e.target.classList.contains('view-btn')) {
+                    const movieId = e.target.dataset.id;
+                    showMovieDetails(movieId);
+                }
+            });
+            
+            // Close modal
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
